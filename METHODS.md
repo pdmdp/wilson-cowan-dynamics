@@ -1,0 +1,37 @@
+# Model conventions and scope of the numerical review
+
+The original report and notebook are retained as coursework artifacts. The November 2026 review is separate, so its changes are not presented as part of the submitted experiments.
+
+## Transfer function
+
+The base notebook helpers and deterministic pulse experiment use a baseline-subtracted sigmoid:
+
+```text
+F(x; a, theta) = sigmoid(a * (x - theta)) - sigmoid(-a * theta)
+```
+
+The original stochastic functions instead call `_logistic`, without the subtraction. Their zero-noise limit therefore differs from the base deterministic system at the same parameters. Fixed points and transition thresholds should not be transferred between those conventions without recomputing them.
+
+The reviewed module uses the baseline-subtracted function for all simulation modes. Its zero-noise additive and OU trajectories match the deterministic trajectory exactly under the same Euler discretization.
+
+## Noise amplitudes
+
+For additive rate noise, each step includes `sigma * sqrt(dt) * normal()`. For OU input noise, `sigma` specifies the stationary standard deviation of the synaptic input. These parameters have different units and enter different parts of the model; equal numerical values do not define a matched-noise comparison.
+
+The reviewed OU process uses its exact discrete transition for a fixed time step. Rate integration still uses Euler. Additive Gaussian noise can take rates outside the unit interval; the stochastic simulator does not silently clamp them. Clipping is enabled explicitly only for the deterministic pulse protocol, to match that part of the coursework.
+
+One paragraph in the original notebook describes an input perturbation proportional to `sqrt(dt)` as having variance proportional to `1/dt`. For the written expression, the perturbation variance is instead `sigma² * dt`. That expression should not be used as a derivation of the additive rate SDE.
+
+The coursework's threshold-crossing count is an exploratory statistic. It is not a residence-time estimate or a fitted test of Kramers' law; rapid recrossings and the chosen threshold can affect it.
+
+## Root finding and the parameter scan
+
+The original inventory collects the numerical solver's returned positions without checking solver success or residual at that stage. The reviewed search accepts only converged roots with infinity-norm residual at most `1e-8`, within the range allowed by the transfer function, and merges roots closer than `1e-5`. It checks the analytic Jacobian against central finite differences.
+
+These checks validate the reported default-parameter equilibria. They do not establish that a finite multistart search has found every equilibrium. The original 22 × 22 scan and its oscillation heuristic remain exploratory; no continuation analysis or formal cusp classification is supplied.
+
+## Pulse experiment
+
+The review uses the course parameters, initial rates `(0.05, 0.05)`, a pulse from 1,000 to 3,000 ms and a 5,500 ms simulation. It scans amplitudes in steps of 0.01 using `dt = 0.1 ms`, then repeats the three cases nearest the observed transition with `dt = 0.05 ms`. The persistent-response classification agrees in those cases.
+
+The result illustrates bistable switching in a mean-field model. It does not establish a mechanism of memory in a particular biological system or permanence beyond the simulated observation window.
