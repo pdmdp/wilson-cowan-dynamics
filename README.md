@@ -1,26 +1,38 @@
 # Wilson–Cowan dynamics
 
-A numerical study of coupled excitatory and inhibitory neural populations: fixed points, stability, stochastic inputs and persistent responses to temporary stimuli.
+How can a temporary input leave a neural population active after the input has stopped? This project studies that question with two coupled populations: one excitatory and one inhibitory.
 
-[Coursework notebook](notebooks/coursework.ipynb) · [Original report](report/coursework-report.pdf) · [Numerical review](reviewed_model.py) · [Method notes](METHODS.md)
+For the tested coupling parameters, the model has **two locally stable states**. A sufficiently strong excitatory pulse moves it from low to high activity, where it can remain after the pulse ends. The numerical study combines fixed-point analysis, parameter sweeps and simulations with noisy inputs.
 
-## Input-gated memory
+[Notebook](notebooks/coursework.ipynb) · [Report](report/coursework-report.pdf) · [Numerical implementation](reviewed_model.py) · [Methods](METHODS.md)
 
-![Input-amplitude sweep and excitatory-rate traces around the persistence threshold](assets/input-gated-memory.png)
+## From equations to behaviour
 
-For the default coupling parameters `(wEE, wEI, wIE, wII) = (9, 4, 13, 11)`, a temporary excitatory pulse can move the system from the low-activity state to the high-activity state. The response then persists after the input is removed.
+The Wilson–Cowan equations describe how excitation and inhibition influence each other's activity. Nullclines locate candidate equilibria; a multistart root search checks the solutions, and Jacobian eigenvalues determine local stability. Simulations then show how trajectories respond to a pulse or to stochastic inputs.
 
-A separate November 2026 reproduction tests 51 pulse amplitudes between 0 and 0.50. The first sampled amplitude producing a persistent high response is **0.46**. The pulse lasts from 1,000 to 3,000 ms; persistence is defined as mean excitatory rate above 0.5 during the final 800 ms of a 5,500 ms simulation. This is a grid-based threshold for that protocol, not an analytically derived bifurcation point. Halving the integration step preserves the classification at amplitudes 0.45, 0.46 and 0.47.
+The course study includes a 22 × 22 coupling scan, additive and Ornstein–Uhlenbeck noise experiments, and an input-pulse study. The numerical review checks root residuals, the Jacobian and sensitivity to the integration step.
 
-## Fixed points and stability
+## Results
 
 ![Nullclines, trajectories and validated fixed points for the default parameters](assets/phase-plane.png)
 
-The reviewed multistart root search finds **three fixed points, two locally stable**, for the default parameter set. Filled markers indicate stable equilibria; the open marker indicates the unstable equilibrium. The blue and dashed orange curves are the excitatory and inhibitory nullclines. Each accepted root passes convergence, bounds and residual checks. Stability is determined by the Jacobian eigenvalues.
+With `(wEE, wEI, wIE, wII) = (9, 4, 13, 11)`, the reviewed root search finds **three fixed points, two locally stable**. Filled markers show stable equilibria; the open marker shows the unstable one. The two stable states allow the same constant parameters to support different persistent responses, depending on the trajectory.
 
-The original notebook extends the base tutorial with a 22 × 22 coupling scan, additive and Ornstein–Uhlenbeck noise experiments, and the input-pulse study. [METHODS.md](METHODS.md) separates those recorded experiments from the later numerical checks and explains the transfer-function conventions.
+![Input-amplitude sweep and activity traces around the persistence threshold](assets/input-gated-memory.png)
 
-## Reproduce the review
+Among 51 pulse amplitudes from 0 to 0.50, the first producing a persistent high response is **0.46**. The pulse lasts from 1,000 to 3,000 ms; persistence means a mean excitatory rate above 0.5 in the final 800 ms of a 5,500 ms simulation. Halving the integration step preserves the classification at 0.45, 0.46 and 0.47.
+
+## Contribution
+
+**Matteo Pietro Di Pilato** · Brain Modelling, BSc in Artificial Intelligence. The project extends [Neuromatch Academy's tutorials](https://compneuro.neuromatch.io/tutorials/W2D5_DynamicalSystems/student/W2D5_Tutorial2.html) with coupling scans, noise comparisons and pulse experiments. The [upstream attribution and code license](THIRD_PARTY_NOTICES.md) are retained.
+
+## Limits and next steps
+
+The value 0.46 is the first successful point on this amplitude grid, under one pulse protocol. It is not an analytically established bifurcation threshold or evidence of biological memory. A next step is to map persistence jointly over pulse amplitude and duration, and test how noise changes the transition.
+
+The figures above come from the numerical review. [METHODS.md](METHODS.md) distinguishes it from the original parameter and noise sweeps, which were not all repeated.
+
+## Run
 
 ```bash
 git clone https://github.com/pdmdp/wilson-cowan-dynamics.git
@@ -29,12 +41,4 @@ python -m pip install -r requirements.txt
 python reproduce.py
 ```
 
-No external dataset is needed. The script checks root residuals, the analytic Jacobian against finite differences, zero-noise equivalence, seeded simulations and the memory result at a smaller time step. It then regenerates both figures and [results/review.json](results/review.json). Verified with Python 3.14.4 and the numerical versions in `requirements.txt`.
-
-The coursework notebook can be opened with Jupyter. Its saved figures and original code are retained; a short archive note was added. The full original parameter scan and noise sweep were not rerun as part of this review.
-
-## Author and foundations
-
-**Matteo Pietro Di Pilato** · Brain Modelling, BSc in Artificial Intelligence.
-
-The base equations and tutorial helpers follow [Neuromatch Academy's Wilson–Cowan tutorials](https://compneuro.neuromatch.io/tutorials/W2D5_DynamicalSystems/student/W2D5_Tutorial2.html). The course project adds the parameter scan, noise comparisons and pulse experiments. Attribution and the upstream code license are retained in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+No external dataset is needed. The script checks numerical consistency and regenerates both figures and [the result record](results/review.json). Open the coursework notebook with Jupyter to explore the original experiments.
